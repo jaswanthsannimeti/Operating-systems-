@@ -1,0 +1,110 @@
+QUESTION-1
+
+ (A) the operating system which is responsible for this environment which include multiple students to execute program simultaneously on a shared server is multi user interface 
+because the multi user interface operating system allows the multiple users to perform multiple tasks simultaneously when they share the same server
+ (B) the kernal is responsible for managing multiple user processes , it allows the users to perform multitasking like 1- process scheduling which is used to process the programs which should be executed first
+and ,2- memory management which is responsible for allocating memory to the processes
+ (C) the psuedo code for displaying child process id and parent process id
+   start
+          include header file (unistd.h)
+          Create a new process using fork()
+          if process creation fails THEN
+          Print "Process creation failed"
+          else if process is Child THEN
+          Print "Child Process ID = Child PID"
+          Print "Parent Process ID = Parent PID"
+          else Print "Parent Process ID = Parent PID"
+          Print "Child Process ID = Child PID"
+    END
+
+
+QUESTION-2
+
+ (A) LIST OF SYSTEM CALLS
+ 1 to crate a file ----create()
+ 2 to write a file ---- write()
+ 3 to read a file  ---- read()
+ 4 to close a file ----close()
+these are the system calls in file management
+ (B) the purpose of file management system calls
+ 1 create() or open() is used to create a text file with the name 
+ 2 write() is used to write the text on a created text file 
+ (C) pseudo code
+ START
+      Create/Open file "student.txt"
+      if file creation fails
+      Print "Error creating file"
+      else
+      Write "John" into the file
+      Close the file
+      end if
+      Print "Data written successfully"
+ END
+
+
+QUESTION-3
+
+ (A) 1-open() – Open the source file.
+     2-creat() with O_CREAT – Create the destination file.
+     3-read() – Read data from the source file.
+     4-write() – Write data to the destination file.
+     5-close() – Close both files.
+ (B) 1. read()---Reads data from the source file into a buffer.
+                 Returns the number of bytes read.
+    2. write()---Writes data from the buffer into the destination file.
+                 Returns the number of bytes written.
+ (C) START
+          Open source file in read mode
+          Create destination file in write mode
+          wlhile data is available
+          Read data from source file
+          Write data to destination file
+          end while
+          Close source file
+          Close destination file
+          Print "File copied successfully"
+     END
+
+
+QUESTION-4
+
+ (A) 1-FORK() - it is used to create a child procss which is a copy of parent process
+     2-EXCE() - it is used to replace the current process
+ (B) role of WAIT() system call
+  the WAIT() system call is used to execute the child process by stopping the parent process
+ (C) pesudo code 
+    START
+          Create a child process using fork()
+          if Child Process THEN
+          Execute a new program using exec()
+          else
+          Wait for the child process to finish using wait()
+          Print "Child process completed"
+          end if
+    END
+
+
+QUESTION-5
+(A) IMPORTANCE OF FILE MANAGEMENT
+    file management is responsible for organizing, storing,and protecting files on secondary storage
+    1-Organizes files and directories efficiently.
+    2-Stores data permanently for future use.
+    3-Allows users to create, read, write, rename, and delete files
+(B) PUEPOSE OF OPEN() CLOSE() SYSTEM CALLS
+    1-open()
+     Opens an existing file (or creates one if required).
+     Returns a file descriptor used for file operations.
+    2-close()
+     Closes the opened file.
+     Releases the file descriptor and system resources.
+ (C) pseudo code
+     START
+          Open the file in read mode
+          if file cannot be opened
+          Print "Error opening file"
+          end if
+          Read data from the file
+          Display the data
+          Close the file
+     END
+
