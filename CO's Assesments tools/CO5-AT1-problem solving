@@ -1,0 +1,146 @@
+S.Lakshmi Jaswanth
+192525383
+
+1. Optimized Linux File System Layout for a 50 GB Server
+
+A Linux server with 50 GB storage should be partitioned properly
+so that rapidly growing log files do not consume all available disk space.
+Separating important directories prevents one type of data from affecting the entire system.
+A suitable layout is to allocate approximately 1 GB for /boot, 8 GB for /, 7 GB for /var, 10 GB for /var/log, 8 GB for /home, 6 GB for /opt, 4 GB for swap, and keep 6 GB as free/reserved space.
+A separate /var/log partition is important because it prevents log files from consuming the space required by the operating system. The maximum size of the log filesystem is limited to 10 GB.
+Linux provides the logrotate utility for automatically managing logs. For example:
+/var/log/application.
+log {
+    daily
+    rotate 7
+    size 100M
+    compress
+    missingok
+    notifempty
+}
+Partition	Size	Purpose
+/boot	        1 GB	 Kernel and boot files
+/      	      8 GB	 Operating system
+/var	        7 GB	 Variable system data
+/var/log	    10 GB	 System/application logs
+/home   	    8 GB	 User files
+/opt	        6 GB	 Application data
+Swap	        4 GB	 Virtual memory
+Free space  	6 GB	 Future expansion/emergency
+Total	50 GB	
+This configuration rotates logs regularly, compresses older logs, and prevents individual log files from growing indefinitely.
+Disk usage can be monitored using:
+df -h
+du -sh /var/log/*
+If the log partition approaches 80–90% usage, the administrator can generate an alert and remove or compress older logs.
+LVM (Logical Volume Management) can also be used because it provides flexibility to increase the size of logical volumes when additional storage becomes available.
+Thus, separating /var/log from the root filesystem, using logrotate, compression, monitoring, and LVM ensures efficient storage utilization. It also prevents logs from exceeding 10 GB and protects critical services from disk-space exhaustion.
+
+
+Q2. Kernel-Level Optimization for High CPU Workloads
+
+Frequent context switching occurs when the CPU repeatedly changes from one process or thread to another.
+Context switching is necessary in a multitasking operating system, but excessive switching creates overhead and reduces CPU performance.
+Since hardware upgrades are not possible, the Linux scheduler and kernel-level features should be optimized.
+First, the administrator should identify the source of excessive context switching using:
+pidstat -w 1
+vmstat 1
+The top command can also be used to identify processes consuming large amounts of CPU.
+CPU affinity can be used to restrict a process to particular CPU cores:
+This reduces unnecessary movement of a process between CPUs and can improve CPU-cache utilization.
+Process priority can also be adjusted using nice and renice. For example:
+renice 10 -p <PID>
+This reduces the priority of a non-critical CPU-intensive process, allowing important processes to receive CPU time first.
+For real-time processing, Linux provides real-time scheduling policies such as FIFO and Round Robin. For example:
+Real-time scheduling must be used carefully because a high-priority
+process can prevent other processes from getting sufficient CPU time.
+Required modules can be loaded using modprobe, while unnecessary modules can be removed when it is safe to do so.
+For strict real-time requirements, CPU isolation and a real-time Linux kernel can also be considered.
+Therefore, measuring context switching, configuring CPU affinity, adjusting priorities, optimizing scheduling 
+and using real-time features can significantly improve performance without requiring hardware upgrades.
+
+
+Q3. Processing 1 Million Log Entries Using Shell Scripting
+
+Processing one million log entries per day requires an efficient shell script. A poorly designed script that executes several commands for every line can take a long time because creating processes repeatedly causes significant overhead.
+For simple pattern searching, grep is an efficient command. For example:
+grep -c "ERROR" logfile
+This counts the number of lines containing ERROR.
+For more complex processing, awk is highly suitable because it can process the entire file in a single operation. For example:
+awk '/ERROR/ {count++} END {print count}' logfile
+This reads the file sequentially and counts all error entries without starting a separate command for every line.
+An inefficient approach would be:
+while read line
+do
+    grep "ERROR" <<< "$line"
+done < logfile
+This creates unnecessary command executions and should be avoided for very large files.
+awk can also extract fields and perform calculations:
+awk '{print $4}' logfile
+For counting frequently occurring values:
+awk '{print $4}' logfile | sort | uniq -c | sort -nr
+However, sort should only be used when necessary because sorting a million records can consume considerable CPU and memory.
+The execution time can be measured using:
+time ./logprocess.sh
+To achieve the two-minute requirement, the script should avoid loops containing external commands, minimize disk reads, process only required fields, and use optimized commands such as awk and grep.
+Therefore, single-pass processing and minimum process creation are the key techniques for processing one million log entries efficiently using shell scripting.
+
+
+Q4. Managing a Faulty Process Consuming 90% CPU
+
+A faulty process consuming 90% CPU can seriously affect system performance. Since the server must not be restarted and critical services must continue running, the administrator should identify and control only the faulty process.
+First, the administrator can use:
+top
+to identify the process consuming excessive CPU.
+Another useful command is:
+ps aux --sort=-%cpu | head
+This displays processes in descending order of CPU usage.
+Suppose the faulty process has PID 2456. Its CPU usage can be monitored using:
+pidstat -p 2456 1
+The administrator can also obtain detailed process information using:
+ps -fp 2456
+If the process is not critical but must continue running, its priority can be reduced:
+renice +10 -p 2456
+CPU affinity can also be used to restrict the process to a particular CPU:
+taskset -cp 0 2456
+If the process is confirmed to be faulty, it should first be terminated gracefully:
+kill 2456
+The administrator should then verify whether it has stopped:
+ps -p 2456
+If it does not respond, kill -9 can be used as a last resort:
+kill -9 2456
+If the process belongs to a system service, its status can be checked using:
+systemctl status service_name
+Only that service can then be restarted if required:
+systemctl restart service_name
+This avoids restarting the entire server.
+Therefore, the correct strategy is to identify, monitor, reduce the process's impact, terminate or restart only the faulty process, and investigate its root cause. This protects critical services while resolving the CPU problem.
+
+
+Q5. Resource Allocation for 5 Virtual Machines with 16 GB RAM
+
+The physical server has a total of 16 GB RAM and needs to run five virtual machines. Each VM requires a minimum of 2 GB, while the host operating system requires 4 GB.
+First, calculate the memory required by all VMs:
+5 × 2 GB = 10 GB
+
+The host requires:
+4 GB
+
+Therefore, total minimum memory required is:
+10 GB + 4 GB = 14 GB
+
+This leaves:
+16 GB − 14 GB = 2 GB
+
+The recommended allocation is therefore 4 GB for the host operating system and 2 GB for each of the five virtual machines, with the remaining 2 GB kept as reserve.
+The host requires memory for the Linux kernel, virtualization software, drivers, filesystem cache, networking, and management processes. Giving the host less than 4 GB could result in memory pressure.
+Each VM should initially receive its required 2 GB. The administrator should monitor actual usage and provide additional memory only when necessary.
+Virtualization technologies can use memory ballooning and controlled memory overcommitment to dynamically manage memory. However, overcommitment should be used carefully. If all VMs simultaneously demand more memory than the physical server has available, the host may start swapping, which can significantly reduce performance.
+Memory usage can be monitored using:
+free -h
+For KVM/libvirt systems, commands such as:
+virsh list
+and:
+virsh dominfo VM1
+can be used to monitor virtual machines.
+Therefore, the safest solution is to allocate 4 GB to the host, 2 GB to each VM, and retain 2 GB as reserve memory. This satisfies the minimum requirements while maintaining a small safety margin and allowing efficient virtualization.
